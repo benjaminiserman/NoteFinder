@@ -5,24 +5,24 @@ namespace NoteFinder
 {
     class Program
     {
-        //                                          0    1     2    3     4    5    6     7    8     9    10    11
+        //                                                    0    1     2    3     4    5    6     7    8     9    10    11
         static readonly string[] sharpNotes = new string[] { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
         static readonly string[] flatNotes = new string[] { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
         static readonly Scale[] scales = new Scale[]
         {
-            new("Major", new int[] {0, 2, 4, 5, 7, 9, 11}),
-            new("Minor", new int[] {0, 2, 3, 5, 7, 8, 10}),
-            new("Ionian", new int[] {0, 2, 4, 5, 7, 9, 11}),
-            new("Dorian", new int[] {0, 2, 3, 5, 7, 9, 10}),
-            new("Phrygian", new int[] {0, 1, 3, 5, 7, 8, 10}),
-            new("Lydian", new int[] {0, 2, 4, 6, 7, 9, 11}),
+            new("Major", new int[] { 0, 2, 4, 5, 7, 9, 11 }),
+            new("Minor", new int[] { 0, 2, 3, 5, 7, 8, 10 }),
+            new("Ionian", new int[] { 0, 2, 4, 5, 7, 9, 11 }),
+            new("Dorian", new int[] { 0, 2, 3, 5, 7, 9, 10 }),
+            new("Phrygian", new int[] { 0, 1, 3, 5, 7, 8, 10 }),
+            new("Lydian", new int[] { 0, 2, 4, 6, 7, 9, 11 }),
             new("Mixolydian", new int[] { 0, 2, 4, 5, 7, 9, 10 }),
             new("Aeolian", new int[] { 0, 2, 3, 5, 7, 8, 10 }),
-            new("Locrian", new int[] {0, 1, 3, 5, 6, 8, 10}),
-            new("Blues", new int[] {0, 3, 5, 6, 7, 10}),
+            new("Locrian", new int[] { 0, 1, 3, 5, 6, 8, 10 }),
+            new("Blues", new int[] { 0, 3, 5, 6, 7, 10 }),
             new("Bebop", new int[] { 0, 2, 4, 5, 7, 9, 10, 11 }),
-            new("Pentatonic", new int[] {0, 2, 4, 7, 9}),
+            new("Pentatonic", new int[] { 0, 2, 4, 7, 9 }),
         };
 
         static readonly string[] stopStrings = new string[] { "end", "stop", "exit", "quit", "" };
@@ -35,78 +35,27 @@ namespace NoteFinder
                 {
                     Console.WriteLine("Type in the name of the scale you want.");
 
-                    string scale = Console.ReadLine().Trim().ToLower();
+                    string input = Console.ReadLine().ToLower();
 
-                    bool foundFirstLetter = false;
+                    if (stopStrings.Contains(input)) return;
 
-                    bool keyFinished = false, scaleFinished = false;
+                    string[] split = input.Split();
 
-                    string working = "";
+                    if (split[0].Length > 2) throw new Exception("Key value too long! should be 1 or 2 characters.");
+                    if (!"abcdefg".Contains(split[0][0])) throw new Exception("Invalid key!");
+                    if (split[0].Length == 2 && !"#b".Contains(split[0][1])) throw new Exception("Invalid key! Second character must be # or b.");
 
-                    int key = 0, scaleType = 0;
+                    bool? isSharp = split[0].Length == 1
+                        ? null
+                        : split[0][1] == '#';
 
-                    bool sharp = true;
+                    int key = isSharp == true
+                        ? Array.FindIndex(sharpNotes, x => x.ToLower() == split[0]) 
+                        : Array.FindIndex(flatNotes, x => x.ToLower() == split[0]);
 
-                    if (stopStrings.Contains(scale.ToLower())) return;
+                    Scale scale = scales.First(x => x.name.ToLower() == split[1]);
 
-                    for (int i = 0; i < scale.Length; i++)
-                    {
-                        if (char.IsWhiteSpace(scale, i))
-                        {
-                            if (foundFirstLetter)
-                            {
-                                if (!keyFinished)
-                                {
-                                    keyFinished = true;
-
-                                    working = $"{char.ToUpper(working[0])}{working[1..].ToLower()}";
-
-                                    if (working.Length > 1)
-                                    {
-                                        if (working.Length > 2) throw new Exception("Key value too long! should be 1 or 2 characters.");
-                                        else if (working[1] == '#') sharp = true;
-                                        else if (working[1] == 'b') sharp = false;
-                                        else throw new Exception("Unknown sharp/flat symbol");
-                                    }
-                                    else
-                                    {
-                                        sharp = true;
-                                    }
-
-                                    if (sharp) key = Array.IndexOf(sharpNotes, working);
-                                    else key = Array.IndexOf(flatNotes, working);
-
-                                    working = string.Empty;
-                                }
-                                else if (!scaleFinished)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (!foundFirstLetter)
-                            {
-                                foundFirstLetter = true;
-                            }
-
-                            working += scale[i];
-                        }
-                    }
-
-                    working = $"{char.ToUpper(working[0])}{working[1..].ToLower()}";
-
-                    for (int i = 0; i < scales.Length; i++)
-                    {
-                        if (scales[i].name == working)
-                        {
-                            scaleType = i;
-                            break;
-                        }
-                    }
-
-                    PrintNotes(key, scaleType, sharp);
+                    PrintNotes(key, scale, isSharp);
                 }
                 catch (Exception e)
                 {
@@ -115,13 +64,11 @@ namespace NoteFinder
             }
         }
 
-        static void PrintNotes(int key, int scaleType, bool sharp)
+        static void PrintNotes(int key, Scale scale, bool? isSharp)
         {
-            Scale thisScale = scales[scaleType];
-
-            for (int i = 0; i < thisScale.notes.Length; i++)
+            for (int i = 0; i < scale.notes.Length; i++)
             {
-                int index = thisScale.notes[i] + key;
+                int index = scale.notes[i] + key;
 
                 while (index >= sharpNotes.Length) index -= sharpNotes.Length;
 
@@ -131,8 +78,14 @@ namespace NoteFinder
                     break;
                 }
 
-                if (sharp) Console.WriteLine(sharpNotes[index]);
-                else Console.WriteLine(flatNotes[index]);
+                Console.WriteLine(isSharp switch
+                {
+                    true => sharpNotes[index],
+                    false => flatNotes[index],
+                    null => sharpNotes[index] == flatNotes[index] 
+                        ? sharpNotes[index] 
+                        : $"{sharpNotes[index]}/{flatNotes[index]}",
+                });
             }
 
             Console.WriteLine();
