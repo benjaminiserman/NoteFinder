@@ -81,8 +81,8 @@ internal class Program
                 false => _flatNotes[index],
                 null => 
                     _sharpNotes[index] == _flatNotes[index]
-                    ? _sharpNotes[index]
-                    : $"{_sharpNotes[index]}/{_flatNotes[index]}",
+                        ? _sharpNotes[index]
+                        : $"{_sharpNotes[index]}/{_flatNotes[index]}",
             });
         }
 
